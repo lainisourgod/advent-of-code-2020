@@ -13,8 +13,8 @@ struct PasswordEntry {
 
 impl PasswordEntry {
     fn is_valid(&self) -> bool {
-        match self.password.chars().map(|x| x == self.letter).count() {
-            x if self.range.contains(&x) => true,
+        match self.password.chars().filter(|&x| x == self.letter).count() {
+            count if self.range.contains(&count) => true,
             _ => false,
         }
     }
@@ -33,9 +33,9 @@ fn test_pass_is_valid() {
         ),
         (
             PasswordEntry {
-                letter: 'l',
-                range: 11..=16,
-                password: "llllqllllllllflq".to_owned(),
+                letter: 'a',
+                range: 1..=3,
+                password: "abcde".to_owned(),
             },
             true,
         ),
@@ -50,7 +50,7 @@ fn test_pass_is_valid() {
     ];
 
     for case in cases {
-        assert_eq!(case.0.is_valid(), case.1);
+        assert_eq!(case.0.is_valid(), case.1, "entry is {:?}", case.0);
     }
 }
 
@@ -127,6 +127,6 @@ fn main() {
     let input = read_input();
     println!(
         "Valid passwords count: {}",
-        input.iter().map(|entry| entry.is_valid()).count()
+        input.iter().filter(|entry| entry.is_valid()).count()
     )
 }
