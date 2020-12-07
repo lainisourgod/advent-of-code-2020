@@ -13,10 +13,8 @@ struct PasswordEntry {
 
 impl PasswordEntry {
     fn is_valid(&self) -> bool {
-        match self.password.chars().filter(|&x| x == self.letter).count() {
-            count if self.range.contains(&count) => true,
-            _ => false,
-        }
+        self.range
+            .contains(&self.password.matches(self.letter).count())
     }
 
     /// Check that exactly one of boundary letters is equal to self.letter
