@@ -18,6 +18,19 @@ impl PasswordEntry {
             _ => false,
         }
     }
+
+    /// Check that exactly one of boundary letters is equal to self.letter
+    fn is_valid_2(&self) -> bool {
+        self.password
+            .chars()
+            .enumerate()
+            .filter(|(pos, letter)| {
+                *letter == self.letter
+                    && (*pos == (self.range.start() - 1) || *pos == (self.range.end() - 1))
+            })
+            .count()
+            == 1
+    }
 }
 
 #[test]
@@ -51,6 +64,40 @@ fn test_pass_is_valid() {
 
     for case in cases {
         assert_eq!(case.0.is_valid(), case.1, "entry is {:?}", case.0);
+    }
+}
+
+#[test]
+fn test_pass_is_valid_2() {
+    let cases = vec![
+        (
+            PasswordEntry {
+                letter: 'a',
+                range: 1..=3,
+                password: "abcde".to_owned(),
+            },
+            true,
+        ),
+        (
+            PasswordEntry {
+                letter: 'b',
+                range: 1..=3,
+                password: "cdefg".to_owned(),
+            },
+            false,
+        ),
+        (
+            PasswordEntry {
+                letter: 'c',
+                range: 2..=9,
+                password: "ccccccccc".to_owned(),
+            },
+            false,
+        ),
+    ];
+
+    for case in cases {
+        assert_eq!(case.0.is_valid_2(), case.1, "entry is {:?}", case.0);
     }
 }
 
@@ -126,7 +173,8 @@ fn read_input() -> Vec<PasswordEntry> {
 fn main() {
     let input = read_input();
     println!(
-        "Valid passwords count: {}",
-        input.iter().filter(|entry| entry.is_valid()).count()
+        "Valid passwords count:\n\tBy 1st rule {}\n\tBy 2nd rule {}",
+        input.iter().filter(|entry| entry.is_valid()).count(),
+        input.iter().filter(|entry| entry.is_valid_2()).count()
     )
 }
