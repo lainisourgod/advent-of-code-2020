@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 const INPUT_FILENANME: &str = "input.txt";
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 enum Cell {
     Tree,
     Free,
@@ -24,6 +24,34 @@ impl FromStr for Cell {
 #[derive(Debug, Clone, Eq, PartialEq)]
 struct Forest {
     pattern: Vec<Vec<Cell>>,
+    pattern_size: (usize, usize),
+    x: usize,
+    y: usize,
+}
+
+impl Forest {
+    fn new(pattern: Vec<Vec<Cell>>) -> Self {
+        let x_size = pattern.len();
+        let y_size = pattern[0].len();
+
+        let pattern_size = (x_size, y_size);
+
+        let x = 0;
+        let y = 0;
+
+        Forest {
+            pattern,
+            pattern_size,
+            x,
+            y,
+        }
+    }
+
+    fn step_and_count_trees(&self) -> u32 {
+        0
+    }
+}
+
 }
 
 impl FromStr for Forest {
@@ -39,7 +67,7 @@ impl FromStr for Forest {
             })
             .collect();
 
-        Ok(Forest { pattern })
+        Ok(Forest::new(pattern))
     }
 }
 
@@ -48,30 +76,22 @@ fn test_pass_from_str() {
     use Cell::*;
 
     let cases = vec![
-        (
-            "####",
-            Forest {
-                pattern: vec![vec![Tree, Tree, Tree, Tree]],
-            },
-        ),
+        ("####", Forest::new(vec![vec![Tree, Tree, Tree, Tree]])),
         (
             "..##.#",
-            Forest {
-                pattern: vec![vec![Free, Free, Tree, Tree, Free, Tree]],
-            },
+            Forest::new(vec![vec![Free, Free, Tree, Tree, Free, Tree]]),
         ),
         (
-            "###.\n##.#",
-            Forest {
-                pattern: vec![vec![Tree, Tree, Tree, Free], vec![Tree, Tree, Free, Tree]],
-            },
+            indoc! {"
+                ###.
+                ##.#
+            "},
+            Forest::new(vec![
+                vec![Tree, Tree, Tree, Free],
+                vec![Tree, Tree, Free, Tree],
+            ]),
         ),
-        (
-            "###.",
-            Forest {
-                pattern: vec![vec![Tree, Tree, Tree, Free]],
-            },
-        ),
+        ("###.", Forest::new(vec![vec![Tree, Tree, Tree, Free]])),
     ];
 
     for case in cases {
