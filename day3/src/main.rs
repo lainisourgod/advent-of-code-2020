@@ -26,35 +26,51 @@ impl FromStr for Cell {
 #[derive(Debug, Clone, Eq, PartialEq)]
 struct Forest {
     pattern: Vec<Vec<Cell>>,
+}
+
+impl Forest {
+    fn new(pattern: Vec<Vec<Cell>>) -> Self {
+        Forest { pattern }
+    }
+
+    fn step_and_count_trees(self) -> u32 {
+        self.into_iter().fold(0, |count, x| {
+            count
+                + match x {
+                    (Cell::Tree, _) => 1,
+                    _ => 0,
+                }
+        })
+    }
+}
+
+impl IntoIterator for Forest {
+    type Item = (Cell, (usize, usize));
+    type IntoIter = ForestIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let x_size = self.pattern.len();
+        let y_size = self.pattern[0].len();
+
+        let pattern_size = (x_size, y_size);
+
+        ForestIntoIterator {
+            forest: self,
+            pattern_size,
+            x: 0,
+            y: 0,
+        }
+    }
+}
+
+struct ForestIntoIterator {
+    forest: Forest,
     pattern_size: (usize, usize),
     x: usize,
     y: usize,
 }
 
-impl Forest {
-    fn new(pattern: Vec<Vec<Cell>>) -> Self {
-        let x_size = pattern.len();
-        let y_size = pattern[0].len();
-
-        let pattern_size = (x_size, y_size);
-
-        let x = 0;
-        let y = 0;
-
-        Forest {
-            pattern,
-            pattern_size,
-            x,
-            y,
-        }
-    }
-
-    fn step_and_count_trees(&self) -> u32 {
-        0
-    }
-}
-
-impl Iterator for Forest {
+impl Iterator for ForestIntoIterator {
     type Item = (Cell, (usize, usize));
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -62,6 +78,7 @@ impl Iterator for Forest {
         self.y += Y_STEP;
 
         match self
+            .forest
             .pattern
             // We can iterate right forever, but not down
             .get(self.y)
