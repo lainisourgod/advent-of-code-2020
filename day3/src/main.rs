@@ -49,8 +49,8 @@ impl IntoIterator for Forest {
     type IntoIter = ForestIntoIterator;
 
     fn into_iter(self) -> Self::IntoIter {
-        let x_size = self.pattern.len();
-        let y_size = self.pattern[0].len();
+        let y_size = self.pattern.len();
+        let x_size = self.pattern[0].len();
 
         let pattern_size = (x_size, y_size);
 
@@ -107,9 +107,9 @@ impl FromStr for Forest {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use indoc::indoc;
-    #[cfg(test)]
     use pretty_assertions::assert_eq;
 
     use super::*;
@@ -172,6 +172,41 @@ mod tests {
             find_correct_positions_in_full_map_no_iterators(_full_map),
             correct_answer
         );
+    }
+
+    #[test]
+    fn test_step_and_count_trees() {
+        let _full_map = indoc! {"
+            ..##.........##.........##.........##.........##.........##.......
+            #..O#...#..#...#...#..#...#...#..#...#...#..#...#...#..#...#...#..
+            .#....X..#..#....#..#..#....#..#..#....#..#..#....#..#..#....#..#.
+            ..#.#...#O#..#.#...#.#..#.#...#.#..#.#...#.#..#.#...#.#..#.#...#.#
+            .#...##..#..X...##..#..#...##..#..#...##..#..#...##..#..#...##..#.
+            ..#.##.......#.X#.......#.##.......#.##.......#.##.......#.##.....
+            .#.#.#....#.#.#.#.O..#.#.#.#....#.#.#.#....#.#.#.#....#.#.#.#....#
+            .#........#.#........X.#........#.#........#.#........#.#........#
+            #.##...#...#.##...#...#.X#...#...#.##...#...#.##...#...#.##...#...
+            #...##....##...##....##...#X....##...##....##...##....##...##....#
+            .#..#...#.#.#..#...#.#.#..#...X.#.#..#...#.#.#..#...#.#.#..#...#.#
+        "};
+
+        let map = indoc! {"
+            ..##.......
+            #...#...#..
+            .#....#..#.
+            ..#.#...#.#
+            .#...##..#.
+            ..#.##.....
+            .#.#.#....#
+            .#........#
+            #.##...#...
+            #...##....#
+            .#..#...#.#
+        "};
+
+        let forest = Forest::from_str(map).unwrap();
+
+        assert_eq!(forest.step_and_count_trees(), 7);
     }
 
     #[test]
@@ -252,6 +287,6 @@ fn read_input() -> Forest {
 }
 
 fn main() {
-    let input = read_input();
-    println!("{:?}", input);
+    let forest = read_input();
+    println!("Trees encountered: {}", forest.step_and_count_trees())
 }
