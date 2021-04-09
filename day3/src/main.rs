@@ -2,8 +2,8 @@ use std::fs::read_to_string;
 use std::str::FromStr;
 
 const INPUT_FILENANME: &str = "input.txt";
-const X_STEP: usize = 3;
-const Y_STEP: usize = 1;
+static mut X_STEP: usize = 3;
+static mut Y_STEP: usize = 1;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 enum Cell {
@@ -74,8 +74,10 @@ impl Iterator for ForestIntoIterator {
     type Item = (Cell, (usize, usize));
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.x += X_STEP;
-        self.y += Y_STEP;
+        unsafe {
+            self.x += X_STEP;
+            self.y += Y_STEP;
+        }
 
         match self
             .forest
@@ -288,5 +290,21 @@ fn read_input() -> Forest {
 
 fn main() {
     let forest = read_input();
-    println!("Trees encountered: {}", forest.step_and_count_trees())
+    println!(
+        "Trees encountered: {}",
+        forest.clone().step_and_count_trees()
+    );
+
+    println!(
+        "Trees encountered in every slope: {}",
+        &[(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]
+            .into_iter()
+            .fold(1, |acc, &(x, y)| {
+                unsafe {
+                    X_STEP = x;
+                    Y_STEP = y;
+                }
+                acc * forest.clone().step_and_count_trees()
+            })
+    );
 }
