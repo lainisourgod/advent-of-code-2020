@@ -1,10 +1,13 @@
 mod types;
 
-use crate::types::Passport;
+use crate::types::{Field, Passport};
 use std::fs::read_to_string;
 
 fn count_valid_passports(passports: Vec<Passport>) -> usize {
-    passports.len()
+    passports
+        .into_iter()
+        .filter(|passport| passport.is_valid())
+        .count()
 }
 
 fn read_input(filename: String) -> Vec<Passport> {

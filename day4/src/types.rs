@@ -1,6 +1,7 @@
 use std::{collections::HashSet, str::FromStr};
+use strum::EnumCount;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, EnumCount)]
 pub(crate) enum Field {
     BirthYear(String),
     IssueYear(String),
@@ -39,6 +40,25 @@ impl FromStr for Field {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Passport(HashSet<Field>);
 
+impl Passport {
+    const REQUIRED_FIELDS_NUM: usize = Field::COUNT - 1;
+    fn is_field_required(field: &Field) -> bool {
+        match field {
+            Field::CountryId(_) => false,
+            _ => true,
+        }
+    }
+
+    pub fn is_valid(&self) -> bool {
+        // All but optinal fields are present -- valid passport
+        self.0
+            .iter()
+            .filter(|&field| Passport::is_field_required(field))
+            .count()
+            == Passport::REQUIRED_FIELDS_NUM
+    }
+}
+
 impl FromStr for Passport {
     type Err = String;
 
@@ -60,6 +80,7 @@ impl FromStr for Passport {
 mod tests {
     use super::*;
     use indoc::indoc;
+    use pretty_assertions::assert_eq;
     use Field::*;
 
     #[test]
@@ -163,6 +184,7 @@ mod tests {
             (
                 indoc! {"
                     hcl:#ae17e1iyr:2013
+                    ecl:brn pid:760753108 byr:1931
                 "},
                 Err("Can not parse field entry hcl:#ae17e1iyr:2013".into()),
             ),
@@ -171,5 +193,52 @@ mod tests {
         for case in cases {
             assert_eq!(case.0.parse(), case.1);
         }
+    }
+
+    #[test]
+    fn test_is_passport_valid() {
+        let cases = [
+            (
+                Passport {
+                    0: vec![
+                        EyeColor("brn".into()),
+                        PassportId("760753108".into()),
+                        ExpirationYear("2024".into()),
+                        HairColor("#ae17e1".into()),
+                        BirthYear("1931".into()),
+                        IssueYear("2013".into()),
+                        Height("179cm".into()),
+                    ]
+                    .into_iter()
+                    .collect(),
+                },
+                true,
+            ),
+            (
+                Passport {
+                    0: vec![
+                        EyeColor("brn".into()),
+                        PassportId("760753108".into()),
+                        ExpirationYear("2024".into()),
+                        HairColor("#ae17e1".into()),
+                        BirthYear("1931".into()),
+                        IssueYear("2013".into()),
+                        CountryId("147".into()),
+                        Height("179cm".into()),
+                    ]
+                    .into_iter()
+                    .collect(),
+                },
+                true,
+            ),
+            (
+                Passport {
+                    0: vec![BirthYear("123".into()), EyeColor("gry".into())]
+                        .into_iter()
+                        .collect(),
+                },
+                false,
+            ),
+        ];
     }
 }
