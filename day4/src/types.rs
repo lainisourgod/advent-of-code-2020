@@ -13,6 +13,62 @@ pub(crate) enum Field {
     CountryId(String),
 }
 
+impl Field {
+    fn is_value_in_valid_range(&self) -> bool {
+        use Field::*;
+
+        // Suppose we deal with only ASCII strings for easier logic...
+        match self {
+            BirthYear(value) => {
+                value.len() == 4 && {
+                    let year = value.parse::<u32>().unwrap_or_default();
+                    (1920..=2002).contains(&year)
+                }
+            }
+            IssueYear(value) => {
+                value.len() == 4 && {
+                    let year = value.parse::<u32>().unwrap_or_default();
+                    (2010..=2020).contains(&year)
+                }
+            }
+            ExpirationYear(value) => {
+                value.len() == 4 && {
+                    let year = value.parse::<u32>().unwrap_or_default();
+                    (2020..=2030).contains(&year)
+                }
+            }
+            Height(value) => {
+                // Guard against incorrect values
+                value.len() > 2 && {
+                    let height: u32 = value[..value.len() - 2].parse().unwrap_or_default();
+
+                    match &value[value.len() - 2..] {
+                        "cm" => (150..=193).contains(&height),
+                        "in" => (59..=76).contains(&height),
+                        _ => false,
+                    }
+                }
+            }
+            HairColor(value) => {
+                value.len() == 7
+                    && matches!(value.chars().next(), Some('#'))
+                    && value
+                        .chars()
+                        .skip(1)
+                        .all(|chr| matches!(chr, 'a'..='f' | '0'..='9'))
+            }
+            EyeColor(value) => {
+                matches!(
+                    value.as_str(),
+                    "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth"
+                )
+            }
+            PassportId(value) => value.len() == 9 && value.parse::<u32>().is_ok(),
+            CountryId(_) => true,
+        }
+    }
+}
+
 impl FromStr for Field {
     type Err = String;
 
@@ -53,6 +109,16 @@ impl Passport {
             .filter(|&field| Passport::is_field_required(field))
             .count()
             == Passport::REQUIRED_FIELDS_NUM
+    }
+
+    pub fn is_valid_2(&self) -> bool {
+        // All but optinal fields are present
+        self.is_valid_1()
+            // All field values are in their ranges
+            && self
+                .0
+                .iter()
+                .all(|field| field.is_value_in_valid_range())
     }
 }
 
@@ -101,6 +167,46 @@ mod tests {
 
         for case in cases {
             assert_eq!(case.0.parse(), case.1);
+        }
+    }
+
+    #[test]
+    fn test_field_value_in_range() {
+        let cases = &[
+            (BirthYear("1937".into()), true),
+            (BirthYear("1910".into()), false),
+            (BirthYear("3000".into()), false),
+            (BirthYear("12".into()), false),
+            (Height("152cm".into()), true),
+            (Height("1524cm".into()), false),
+            (Height("12cm".into()), false),
+            (Height("1cm".into()), false),
+            (Height("62in".into()), true),
+            (Height("12in".into()), false),
+            (Height("1in".into()), false),
+            (HairColor("#fac9b0".into()), true),
+            (HairColor("#fac9b04".into()), false),
+            (HairColor("#fac9b".into()), false),
+            (HairColor("#lollol".into()), false),
+            (HairColor("fac9b0".into()), false),
+            (HairColor("fac9b04".into()), false),
+            (EyeColor("amb".into()), true),
+            (EyeColor("hello".into()), false),
+            (PassportId("012345678".into()), true),
+            (PassportId("0000000010".into()), false),
+            (PassportId("00a000001".into()), false),
+            (CountryId("129".into()), true),
+            (CountryId("russia".into()), true),
+        ];
+
+        for (index, case) in cases.iter().enumerate() {
+            assert_eq!(
+                case.0.is_value_in_valid_range(),
+                case.1,
+                "failed field_value_in_range with case {:?}\n----- at index {}",
+                case,
+                index
+            );
         }
     }
 
