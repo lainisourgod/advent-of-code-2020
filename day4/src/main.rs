@@ -1,12 +1,19 @@
 mod types;
 
-use crate::types::{Field, Passport};
+use crate::types::Passport;
 use std::fs::read_to_string;
 
-fn count_valid_passports(passports: Vec<Passport>) -> usize {
+fn count_valid_passports_1(passports: &[Passport]) -> usize {
     passports
-        .into_iter()
-        .filter(|passport| passport.is_valid())
+        .iter()
+        .filter(|passport| passport.is_valid_1())
+        .count()
+}
+
+fn count_valid_passports_2(passports: &[Passport]) -> usize {
+    passports
+        .iter()
+        .filter(|passport| passport.is_valid_2())
         .count()
 }
 

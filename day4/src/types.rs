@@ -20,7 +20,7 @@ impl FromStr for Field {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         use Field::*;
 
-        match s.split(":").collect::<Vec<&str>>()[..] {
+        match s.split(':').collect::<Vec<&str>>()[..] {
             [a, b] => match a {
                 "byr" => Ok(BirthYear(b.into())),
                 "iyr" => Ok(IssueYear(b.into())),
@@ -43,13 +43,10 @@ pub(crate) struct Passport(HashSet<Field>);
 impl Passport {
     const REQUIRED_FIELDS_NUM: usize = Field::COUNT - 1;
     fn is_field_required(field: &Field) -> bool {
-        match field {
-            Field::CountryId(_) => false,
-            _ => true,
-        }
+        !matches!(field, Field::CountryId(_))
     }
 
-    pub fn is_valid(&self) -> bool {
+    pub fn is_valid_1(&self) -> bool {
         // All but optinal fields are present -- valid passport
         self.0
             .iter()
@@ -196,8 +193,8 @@ mod tests {
     }
 
     #[test]
-    fn test_is_passport_valid() {
-        let cases = [
+    fn test_is_passport_valid_1() {
+        let cases = &[
             (
                 Passport {
                     0: vec![
@@ -240,5 +237,15 @@ mod tests {
                 false,
             ),
         ];
+
+        for (index, case) in cases.iter().enumerate() {
+            assert_eq!(
+                case.0.is_valid_1(),
+                case.1,
+                "failed is_valid_1 with case {:?}\n------ at index {}",
+                case,
+                index
+            )
+        }
     }
 }
