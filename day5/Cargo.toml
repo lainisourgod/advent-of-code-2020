@@ -3,3 +3,10 @@ name = "day5"
 version = "0.1.0"
 authors = ["meandmymind <beaverloverock@gmail.com>"]
 edition = "2018"
+
+[dependencies]
+
+[dev-dependencies]
+indoc = "1.0.3"
+pretty_assertions = "0.7.2"
+test-case = "1.1.0"

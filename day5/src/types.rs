@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 pub(crate) struct Seat {
     row: u32,
     column: u32,
@@ -48,5 +48,28 @@ impl FromStr for Seat {
         )?;
 
         Ok(seat)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use indoc::indoc;
+    use test_case::test_case;
+
+    #[test_case("BFFFBBFRRR", Ok(Seat {row: 70,  column: 7}))]
+    #[test_case("FFFBBBFRRR", Ok(Seat {row: 14,  column: 7}))]
+    #[test_case("BBFFBBFRLL", Ok(Seat {row: 102, column: 4}))]
+    #[test_case("FBFBBFFRLR", Ok(Seat {row: 44,  column: 5}))]
+    fn seat_from_str(x: &str, seat: Result<Seat, String>) {
+        pretty_assertions::assert_eq!(x.parse(), seat)
+    }
+
+    #[test_case(Seat {row: 70,  column: 7} => 567)]
+    #[test_case(Seat {row: 14,  column: 7} => 119)]
+    #[test_case(Seat {row: 102, column: 4} => 820)]
+    #[test_case(Seat {row: 44,  column: 5} => 357)]
+    fn id_of_seat(seat: Seat) -> u32 {
+        seat.id()
     }
 }
