@@ -7,7 +7,12 @@ fn read_input(filename: &str) -> Vec<Seat> {
     read_to_string(filename)
         .expect("No file named \"input.txt\" found")
         .split('\n')
-        .map(|seat_as_string| seat_as_string.parse().expect("Seat is bad"))
+        .enumerate()
+        .map(|(line, seat_as_string)| {
+            seat_as_string
+                .parse()
+                .unwrap_or_else(|_| panic!("Seat at line {} is bad:", line))
+        })
         .collect()
 }
 
