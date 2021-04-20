@@ -31,20 +31,20 @@ impl SeatRange {
     fn calculate_next(&self, movement: &char) -> Self {
         match movement {
             'B' => SeatRange {
-                rows: (self.rows.end / 2)..(self.rows.end),
+                rows: ((self.rows.end + self.rows.start) / 2)..(self.rows.end),
                 columns: self.columns.clone(),
             },
             'F' => SeatRange {
-                rows: (self.rows.start)..(self.rows.end / 2),
+                rows: (self.rows.start)..((self.rows.end + self.rows.start) / 2),
                 columns: self.columns.clone(),
             },
             'L' => SeatRange {
-                rows: (self.rows.end / 2)..(self.rows.end),
-                columns: (self.columns.start)..(self.columns.end / 2),
+                rows: self.rows.clone(),
+                columns: (self.columns.start)..((self.columns.end + self.columns.start) / 2),
             },
             'R' => SeatRange {
-                rows: (self.rows.end / 2)..(self.rows.end),
-                columns: (self.columns.end / 2)..(self.columns.end),
+                rows: self.rows.clone(),
+                columns: ((self.columns.start + self.columns.end) / 2)..(self.columns.end),
             },
             _ => unreachable!(),
         }
@@ -61,14 +61,13 @@ impl FromStr for Seat {
                 if !matches!(movement, 'B' | 'F' | 'L' | 'R') {
                     Err(format!("Bad movement {} at index {}", movement, index))
                 } else {
-                    dbg!(index, &seat_range, &movement);
                     Ok(seat_range.calculate_next(&movement))
                 }
             },
         )?;
 
         assert!(
-            seat_range.rows.is_empty() && seat_range.columns.is_empty(),
+            seat_range.rows.len() == 1 && seat_range.columns.len() == 1,
             "Read all movements but range is not empty: {:?}",
             seat_range
         );
