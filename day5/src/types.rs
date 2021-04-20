@@ -1,35 +1,52 @@
-use std::str::FromStr;
+use std::{ops::Range, str::FromStr};
 
 #[derive(Debug, Default, PartialEq)]
 pub(crate) struct Seat {
-    row: u32,
-    column: u32,
+    row: usize,
+    column: usize,
 }
 
 impl Seat {
-    pub fn id(&self) -> u32 {
+    pub fn id(&self) -> usize {
         self.row * 8 + self.column
     }
+}
 
-    pub fn calculate_movement(&self, movement: &char) -> Result<Self, ()> {
+#[derive(Debug, Clone)]
+struct SeatRange {
+    rows: Range<usize>,
+    columns: Range<usize>,
+}
+
+impl Default for SeatRange {
+    fn default() -> Self {
+        SeatRange {
+            rows: 0..128,
+            columns: 0..8,
+        }
+    }
+}
+
+impl SeatRange {
+    fn calculate_next(&self, movement: &char) -> Self {
         match movement {
-            'B' => Ok(Seat {
-                row: self.row + 1,
-                column: self.column + 1,
-            }),
-            'F' => Ok(Seat {
-                row: self.row + 1,
-                column: self.column + 1,
-            }),
-            'L' => Ok(Seat {
-                row: self.row + 1,
-                column: self.column + 1,
-            }),
-            'R' => Ok(Seat {
-                row: self.row + 1,
-                column: self.column + 1,
-            }),
-            _ => Err(()),
+            'B' => SeatRange {
+                rows: (self.rows.end / 2)..(self.rows.end),
+                columns: self.columns.clone(),
+            },
+            'F' => SeatRange {
+                rows: (self.rows.start)..(self.rows.end / 2),
+                columns: self.columns.clone(),
+            },
+            'L' => SeatRange {
+                rows: (self.rows.end / 2)..(self.rows.end),
+                columns: (self.columns.start)..(self.columns.end / 2),
+            },
+            'R' => SeatRange {
+                rows: (self.rows.end / 2)..(self.rows.end),
+                columns: (self.columns.end / 2)..(self.columns.end),
+            },
+            _ => unreachable!(),
         }
     }
 }
@@ -38,16 +55,28 @@ impl FromStr for Seat {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let seat = s.chars().enumerate().try_fold(
-            Seat::default(),
-            |searched_seat, (index, movement)| {
-                searched_seat
-                    .calculate_movement(&movement)
-                    .map_err(|()| format!("Bad movement {} at index {}", movement, index))
+        let seat_range = s.chars().enumerate().try_fold(
+            SeatRange::default(),
+            |seat_range, (index, movement)| {
+                if !matches!(movement, 'B' | 'F' | 'L' | 'R') {
+                    Err(format!("Bad movement {} at index {}", movement, index))
+                } else {
+                    dbg!(index, &seat_range, &movement);
+                    Ok(seat_range.calculate_next(&movement))
+                }
             },
         )?;
 
-        Ok(seat)
+        assert!(
+            seat_range.rows.is_empty() && seat_range.columns.is_empty(),
+            "Read all movements but range is not empty: {:?}",
+            seat_range
+        );
+
+        Ok(Seat {
+            row: seat_range.rows.start,
+            column: seat_range.columns.start,
+        })
     }
 }
 
@@ -69,7 +98,7 @@ mod tests {
     #[test_case(Seat {row: 14,  column: 7} => 119)]
     #[test_case(Seat {row: 102, column: 4} => 820)]
     #[test_case(Seat {row: 44,  column: 5} => 357)]
-    fn id_of_seat(seat: Seat) -> u32 {
+    fn id_of_seat(seat: Seat) -> usize {
         seat.id()
     }
 }
