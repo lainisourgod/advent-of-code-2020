@@ -66,11 +66,12 @@ impl FromStr for Seat {
             },
         )?;
 
-        assert!(
-            seat_range.rows.len() == 1 && seat_range.columns.len() == 1,
-            "Read all movements but range is not empty: {:?}",
-            seat_range
-        );
+        if !(seat_range.rows.len() == 1 && seat_range.columns.len() == 1) {
+            return Err(format!(
+                "Read all movements but range is not empty: {:?}",
+                seat_range,
+            ));
+        }
 
         Ok(Seat {
             row: seat_range.rows.start,
@@ -82,7 +83,6 @@ impl FromStr for Seat {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use indoc::indoc;
     use test_case::test_case;
 
     #[test_case("BFFFBBFRRR", Ok(Seat {row: 70,  column: 7}))]
